@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Restaurant Finder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: max(884px, 100dvh);
+        }
+
+        .view {
+            display: none;
+        }
+
+        .view.active {
+            display: flex;
+        }
+
+        .slide-up {
+            animation: slideUp 0.3s ease-in-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 flex items-center justify-center">
+    <div id="app" class="max-w-sm mx-auto bg-white shadow-lg h-screen w-full flex flex-col rounded-xl overflow-hidden">
+        <!-- Home View -->
+        <div id="home-view" class="view active flex-grow relative">
+            <div class="absolute inset-0 bg-gray-200">
+                <img alt="Map with location pins" class="w-full h-full object-cover"
+                    src="https://images.unsplash.com/photo-1596701070855-46736203061c?q=80&w=1974&auto=format&fit=crop" />
+            </div>
+            <!-- Search & Filter bar -->
+            <div class="absolute top-4 left-4 right-4 z-10 flex items-center space-x-2">
+                <div class="relative flex-grow">
+                    <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
+                    <input class="w-full bg-white rounded-full py-3 pl-10 pr-4 shadow-md focus:outline-none"
+                        placeholder="Cari restoran, kafe, warung..." type="text" />
+                </div>
+                <button
+                    class="bg-white rounded-full px-4 py-3 shadow-md flex items-center transition-all duration-300 hover:scale-105 hover:bg-gray-50">
+                    <span class="material-icons text-gray-600">filter_list</span>
+                </button>
+            </div>
+            <div class="absolute bottom-1/3 right-4 z-10 mb-4">
+                <button
+                    class="bg-white rounded-full p-3 shadow-md transition-all duration-300 hover:scale-110 hover:bg-gray-50">
+                    <span class="material-icons text-gray-700">my_location</span>
+                </button>
+            </div>
+            <div id="restaurant-list"
+                class="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-lg p-4 h-auto max-h-1/2 overflow-y-auto slide-up">
+                <h2 class="text-lg font-semibold mb-4">Restoran terdekat <span class="font-normal text-gray-500">(5 dalam 1 km)</span></h2>
+                <div class="space-y-4">
+                    <!-- Restaurant Cards will be rendered here by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Detail View -->
+        <div id="detail-view" class="view flex-grow relative hidden">
+            <!-- Back button -->
+            <button onclick="navigate('home')"
+                class="absolute top-4 left-4 z-10 bg-white rounded-full p-2 shadow-md transition-all duration-300 hover:scale-110 hover:bg-gray-50">
+                <span class="material-icons text-gray-700">arrow_back</span>
+            </button>
+            <!-- Restaurant image -->
+            <div id="detail-image" class="w-full h-1/2 bg-cover bg-center rounded-b-3xl">
+            </div>
+            <div class="p-4 flex-grow overflow-y-auto">
+                <h1 id="detail-name" class="text-2xl font-bold mb-2">Kopi Senja</h1>
+                <p id="detail-type" class="text-gray-500 mb-2">Kafe</p>
+                <div class="flex items-center text-sm mb-4">
+                    <span class="material-icons text-yellow-500 text-base">star</span>
+                    <span id="detail-rating" class="ml-1 font-semibold">4.8</span>
+                    <span id="detail-review-count" class="text-gray-500 ml-1">(210)</span>
+                </div>
+                <div class="flex items-center mb-2">
+                    <span class="material-icons text-gray-500 mr-2">location_on</span>
+                    <p id="detail-address" class="text-sm text-gray-600">Jl. Bunga Melati No. 12, Jakarta</p>
+                </div>
+                <div class="flex items-center mb-4">
+                    <span class="material-icons text-gray-500 mr-2">schedule</span>
+                    <p id="detail-hours" class="text-sm text-gray-600">Buka: 09:00 - 22:00</p>
+                </div>
+                <p id="detail-description" class="text-sm text-gray-700 leading-relaxed mb-4">
+                    Kafe yang nyaman dengan suasana yang tenang, cocok untuk bekerja atau bersantai. Kami menyajikan berbagai macam kopi
+                    dan camilan ringan.
+                </p>
+
+                <h2 class="text-lg font-semibold mb-2">Menu</h2>
+                <ul id="detail-menu" class="space-y-2 text-sm">
+                    <li>Kopi Hitam - Rp 25.000</li>
+                    <li>Latte - Rp 30.000</li>
+                    <li>Americano - Rp 28.000</li>
+                </ul>
+
+            </div>
+            <div class="p-4 border-t border-gray-200">
+                <button
+                    class="w-full bg-blue-600 text-white py-3 rounded-full text-lg font-semibold transition-all duration-300 hover:bg-blue-700 hover:scale-105">Pesan Sekarang</button>
+            </div>
+        </div>
+
+        <!-- Profile View -->
+        <div id="profile-view" class="view flex-grow relative hidden">
+            <div class="p-8 flex flex-col items-center justify-center h-full">
+                <span class="material-icons text-6xl text-gray-400 mb-4">person</span>
+                <h1 class="text-2xl font-bold mb-2">Profil Pengguna</h1>
+                <p class="text-gray-500 mb-6 text-center">Anda dapat melihat informasi akun dan preferensi di sini.</p>
+
+                <div class="w-full space-y-4">
+                    <div class="bg-gray-100 rounded-lg p-4 flex items-center justify-between">
+                        <span class="text-sm font-medium text-gray-700">Nama</span>
+                        <span class="text-sm text-gray-500">John Doe</span>
+                    </div>
+                    <div class="bg-gray-100 rounded-lg p-4 flex items-center justify-between">
+                        <span class="text-sm font-medium text-gray-700">Email</span>
+                        <span class="text-sm text-gray-500">john.doe@email.com</span>
+                    </div>
+                    <div class="bg-gray-100 rounded-lg p-4 flex items-center justify-between">
+                        <span class="text-sm font-medium text-gray-700">Pengaturan</span>
+                        <span class="material-icons text-gray-500">chevron_right</span>
+                    </div>
+                </div>
+
+                <button
+                    class="mt-8 w-full bg-red-500 text-white py-3 rounded-full text-lg font-semibold transition-all duration-300 hover:bg-red-600 hover:scale-105">Keluar</button>
+            </div>
+        </div>
+
+        <!-- Message/Order Modal -->
+        <div id="message-modal"
+            class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-xl p-6 text-center shadow-lg transform transition-all duration-300 scale-95">
+                <span class="material-icons text-green-500 text-6xl mb-4">check_circle</span>
+                <h3 class="text-xl font-semibold mb-2">Pesanan Dikonfirmasi!</h3>
+                <p class="text-sm text-gray-600 mb-4">Anda akan segera di-redirect ke website restoran</p>
+                <button onclick="closeModal()"
+                    class="bg-blue-600 text-white px-6 py-2 rounded-full font-medium transition-all duration-300 hover:bg-blue-700">Tutup</button>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bg-white border-t border-gray-200 sticky bottom-0">
+            <div class="flex justify-around items-center h-16">
+                <a class="nav-item text-center text-gray-800 transition-colors duration-200" href="#"
+                    onclick="navigate('home')">
+                    <span class="material-icons">home</span>
+                    <span class="block text-xs">Home</span>
+                </a>
+                <a class="nav-item text-center text-gray-500 transition-colors duration-200" href="#"
+                    onclick="navigate('detail', data[0])">
+                    <span class="material-icons">list</span>
+                    <span class="block text-xs">Detail</span>
+                </a>
+                <a class="nav-item text-center text-gray-500 transition-colors duration-200" href="#"
+                    onclick="navigate('profile')">
+                    <span class="material-icons">person_outline</span>
+                    <span class="block text-xs">Profile</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const data = [{
+            id: 1,
+            name: "Bakso Pak Man",
+            type: "Bakso, Warung",
+            rating: 4.5,
+            reviews: 128,
+            status: "Buka",
+            statusColor: "green",
+            buttonText: "Pesan Online",
+            image: "https://images.unsplash.com/photo-1598502334860-26416629707e?q=80&w=1974&auto=format&fit=crop",
+            address: "Jl. Merdeka No. 45, Surabaya",
+            hours: "Buka: 10:00 - 21:00",
+            description: "Bakso lezat dan terjangkau. Terbuat dari daging sapi pilihan dengan kuah kaldu yang kaya rasa.",
+            menu: ["Bakso Biasa - Rp 15.000", "Bakso Urat - Rp 20.000", "Bakso Komplit - Rp 25.000"]
+        }, {
+            id: 2,
+            name: "Kopi Senja",
+            type: "Kafe",
+            rating: 4.8,
+            reviews: 210,
+            status: "Tutup",
+            statusColor: "red",
+            buttonText: "Hubungi",
+            image: "https://images.unsplash.com/photo-1554378873-e380e227a922?q=80&w=1964&auto=format&fit=crop",
+            address: "Jl. Bunga Melati No. 12, Jakarta",
+            hours: "Buka: 09:00 - 22:00",
+            description: "Kafe yang nyaman dengan suasana yang tenang, cocok untuk bekerja atau bersantai. Kami menyajikan berbagai macam kopi dan camilan ringan.",
+            menu: ["Kopi Hitam - Rp 25.000", "Latte - Rp 30.000", "Americano - Rp 28.000"]
+        }, {
+            id: 3,
+            name: "Ayam Goreng",
+            type: "Restoran",
+            rating: 4.2,
+            reviews: 54,
+            status: "Buka",
+            statusColor: "green",
+            buttonText: "Pesan Online",
+            image: "https://images.unsplash.com/photo-1579979753173-9896790d0b7d?q=80&w=2071&auto=format&fit=crop",
+            address: "Jl. Jenderal Sudirman No. 7, Bandung",
+            hours: "Buka: 11:00 - 23:00",
+            description: "Restoran yang menyajikan ayam goreng renyah dan nikmat dengan bumbu khas. Tersedia pilihan sambal pedas.",
+            menu: ["Ayam Goreng Dada - Rp 20.000", "Ayam Goreng Paha - Rp 18.000", "Paket Nasi Ayam - Rp 25.000"]
+        }];
+
+        let currentView = 'home';
+        const views = {
+            home: document.getElementById('home-view'),
+            detail: document.getElementById('detail-view'),
+            profile: document.getElementById('profile-view')
+        };
+        const navItems = document.querySelectorAll('.nav-item');
+        const restaurantListContainer = document.querySelector('#restaurant-list .space-y-4');
+        const messageModal = document.getElementById('message-modal');
+
+        function renderHomeView() {
+            restaurantListContainer.innerHTML = '';
+            data.forEach(restaurant => {
+                const card = document.createElement('div');
+                card.className = "flex items-center p-2 rounded-lg transition-all duration-300 cursor-pointer hover:bg-gray-50";
+                card.innerHTML = `
+                    <img alt="${restaurant.name}" class="w-20 h-20 rounded-lg object-cover" src="${restaurant.image}" />
+                    <div class="flex-grow ml-4">
+                        <h3 class="font-bold text-lg">${restaurant.name}</h3>
+                        <p class="text-sm text-gray-500">${restaurant.type}</p>
+                        <div class="flex items-center text-sm mt-1">
+                            <span class="material-icons text-yellow-500 text-base">star</span>
+                            <span class="ml-1 font-semibold">${restaurant.rating}</span>
+                            <span class="text-gray-500 ml-1">(${restaurant.reviews})</span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <button onclick="event.stopPropagation(); showOrderModal('${restaurant.name}')"
+                            class="bg-gray-100 text-gray-800 text-sm font-semibold py-2 px-4 rounded-full mb-2 transition-all duration-300 hover:bg-gray-200 hover:scale-105">
+                            ${restaurant.buttonText}
+                        </button>
+                        <div class="flex items-center justify-end text-sm">
+                            <span class="w-2 h-2 bg-${restaurant.statusColor}-500 rounded-full mr-2"></span>
+                            <span class="text-${restaurant.statusColor}-500 font-semibold">${restaurant.status}</span>
+                        </div>
+                    </div>
+                `;
+                card.addEventListener('click', () => navigate('detail', restaurant));
+                restaurantListContainer.appendChild(card);
+            });
+        }
+
+        function renderDetailView(restaurant) {
+            document.getElementById('detail-name').textContent = restaurant.name;
+            document.getElementById('detail-type').textContent = restaurant.type;
+            document.getElementById('detail-rating').textContent = restaurant.rating;
+            document.getElementById('detail-review-count').textContent = `(${restaurant.reviews})`;
+            document.getElementById('detail-address').textContent = restaurant.address;
+            document.getElementById('detail-hours').textContent = restaurant.hours;
+            document.getElementById('detail-description').textContent = restaurant.description;
+            document.getElementById('detail-image').style.backgroundImage = `url('${restaurant.image}')`;
+
+            const menuList = document.getElementById('detail-menu');
+            menuList.innerHTML = '';
+            restaurant.menu.forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = item;
+                menuList.appendChild(li);
+            });
+        }
+
+        function navigate(viewName, data = null) {
+            if (currentView === viewName) return;
+
+            // Hide all views first
+            Object.values(views).forEach(v => v.classList.remove('active'));
+
+            // Show the selected view
+            const selectedView = views[viewName];
+            if (selectedView) {
+                selectedView.classList.add('active');
+                if (viewName === 'detail' && data) {
+                    renderDetailView(data);
+                }
+            }
+
+            // Update navigation button active state
+            navItems.forEach(item => {
+                const span = item.querySelector('.block');
+                if (span.textContent.toLowerCase() === viewName) {
+                    item.classList.remove('text-gray-500');
+                    item.classList.add('text-gray-800');
+                } else {
+                    item.classList.remove('text-gray-800');
+                    item.classList.add('text-gray-500');
+                }
+            });
+
+            currentView = viewName;
+        }
+
+        function showOrderModal(restaurantName) {
+            const modalTitle = messageModal.querySelector('h3');
+            const modalMessage = messageModal.querySelector('p');
+
+            modalTitle.textContent = `Pesanan di ${restaurantName} Dikonfirmasi!`;
+            modalMessage.textContent = `Anda akan segera di-redirect ke website restoran`;
+
+            messageModal.classList.remove('hidden');
+            messageModal.querySelector('.transform').classList.add('scale-100');
+            messageModal.querySelector('.transform').classList.remove('scale-95');
+        }
+
+        function closeModal() {
+            messageModal.querySelector('.transform').classList.add('scale-95');
+            messageModal.querySelector('.transform').classList.remove('scale-100');
+            setTimeout(() => {
+                messageModal.classList.add('hidden');
+            }, 300);
+        }
+
+        // Initial render
+        document.addEventListener('DOMContentLoaded', () => {
+            renderHomeView();
+        });
+    </script>
+</body>
+
+</html>
